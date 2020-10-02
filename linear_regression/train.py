@@ -2,9 +2,10 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from common_utils import get_train_val_loader
-from linear_model import ManualRegression
-from preprocessing import make_train_step, get_data
+from common_utils.util import get_train_val_loader, get_data
+from linear_regression.linear_model import ManualRegression
+from linear_regression.preprocessing import make_train_step
+
 
 if __name__ == '__main__':
 
