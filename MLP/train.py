@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     train_loader = get_train_val_loader(x_tensor, y_tensor, shuffle=False)
 
-    lr = 0.01
+    lr = 0.1
     n_epochs = 100
     model = SimpleMLP(x_tensor.size()[-1]).to(device)
     optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -55,4 +55,5 @@ if __name__ == '__main__':
             optimizer.step()
             optimizer.zero_grad()
 
+        print("train_loss", train_loss, "epoch",epoch)
     print(model.state_dict())
