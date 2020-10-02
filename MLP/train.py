@@ -19,7 +19,7 @@ if __name__ == '__main__':
 
     x_tensor, y_tensor = get_data_text(data_path)
 
-    train_loader = get_train_val_loader(x_tensor, y_tensor, shuffle=False)
+    train_loader, val_loader = get_train_val_loader(x_tensor, y_tensor, split_seq=[30,9], shuffle=False)
 
     lr = 0.1
     n_epochs = 100
