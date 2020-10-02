@@ -3,11 +3,13 @@ import torch.nn as nn
 import torch.optim as optim
 
 from linear_model import ManualRegression
-from preprocessing import get_x_y
+from preprocessing import get_train_val_loader, make_train_step
 
 if __name__ == '__main__':
 
+    # switch to cuda if available
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
     torch.manual_seed(42)
 
     lr = 0.05
@@ -17,33 +19,36 @@ if __name__ == '__main__':
     print(model.state_dict())
 
     loss_fn = nn.MSELoss(reduction='mean')
-    optimizer = optim.SGD(model.parameters(), lr=lr)
+    optimizer = optim.Adam(model.parameters(), lr=lr)  # could use Adam optimizer as well
 
-    x_train, y_train = get_x_y()
+    train_loader, val_loader = get_train_val_loader()
 
+    train_step = make_train_step(model, loss_fn, optimizer)
+
+    losses = []
+    val_losses = []
     for epoch in range(n_epochs):
-        model.train()
+        for x_batch , y_batch in train_loader:
 
-        # prediction
-        yhat = model(x_train)
+            x_batch = x_batch.to(device)
+            y_batch = y_batch.to(device)
 
-        # loss
-        # loss = -2 * (error ** 2).mean(
-        loss = loss_fn(y_train, yhat)
+            loss = train_step(x_batch, y_batch)
+            losses.append(loss)
 
-        # SGD
-        # a_grad = -2 * error.mean()
-        # b_grad = -2 * (x_train * error).mean()
-        loss.backward()
+        # evaluation on val data
+        for x_val, y_val in val_loader:
+            x_val = x_val.to(device)  # loading only sample of dataset in memory
+            y_val = y_val.to(device)
 
-        # updaye
-        # a = a - lr * a_grad
-        # b = b = lr * b_grad
-        optimizer.step()
+            model.eval()
 
-        # pytocrh requires to reset the gradients
-        optimizer.zero_grad()
+            yhat = model(x_val)
 
+            val_loss = loss_fn(y_val, yhat)
+            val_losses.append(val_loss.item())
+
+    # check model params
     print(model.state_dict())
 
     # evaluate the performance

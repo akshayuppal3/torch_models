@@ -1,28 +1,60 @@
 import numpy as np
 import torch
+from torch.utils.data import DataLoader, Dataset
+from torch.utils.data.dataset import random_split, TensorDataset
 
 
-def get_x_y():
+class CustomeDataset(Dataset):
+    def __init__(self, x_tensor, y_tensor):
+        self.x = x_tensor
+        self.y = y_tensor
+
+    def __getitem__(self, index):
+        return (self.x[index], self.y[index])
+
+    def __len__(self):
+        return len(self.x)
+
+
+def get_train_val_loader(train_batch_size=16, val_batch_size=20, shuffle=True):
     x = np.random.rand(100, 1)
     assert x.shape == (100, 1)
 
     # linear equation
     y = 1 + 2 * x + 0.1 * np.random.rand(100, 1)
 
-    # shuffle the indices
-    idx = np.arange(100)
-    np.random.shuffle(idx)
+    x_tensor = torch.from_numpy(x).float()
+    y_tensor = torch.from_numpy(y).float()
 
-    train_idx = idx[:80]
-    test_idx = idx[80:]
+    dataset = CustomeDataset(x_tensor, y_tensor)  # could use TensorDataset
 
-    x_train, y_train = x[train_idx], y[train_idx]
-    x_test, y_test = x[test_idx], y[test_idx]
+    train_dataset, val_dataset = random_split(dataset, [80, 20])
 
-    # switch to cuda if available
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    train_loader = DataLoader(dataset=train_dataset, batch_size=train_batch_size, shuffle=shuffle)
+    val_loader = DataLoader(dataset=val_dataset, batch_size=val_batch_size, shuffle=shuffle)
 
-    x_train_tensor = torch.from_numpy(x_train).float().to(device)
-    y_train_tensor = torch.from_numpy(y_train).float().to(device)
+    return train_loader, val_loader
 
-    return x_train_tensor, y_train_tensor
+
+def make_train_step(model, loss_fn, optimizer):
+    def train_step(x, y):
+        # train model
+        model.train()
+
+        # make prediction
+        yhat = model(x)
+
+        # compute the loss
+        loss = loss_fn(y, yhat)
+
+        # compute the gradients
+        loss.backward()
+
+        # Update the parametes and zero gradients
+        optimizer.step()
+        optimizer.zero_grad()
+
+        return loss.item()
+
+    # return function taht will be called inside train loop
+    return train_step
