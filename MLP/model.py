@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
+import torch
 
 
 class SimpleMLP(nn.Module):
@@ -7,7 +8,7 @@ class SimpleMLP(nn.Module):
         super(SimpleMLP, self).__init__()
         self.d_ff = d_model
         self.fc11 = nn.Linear(d_model, self.d_ff)
-        self.fc2 = nn.Linear(self.d_ff, 2)
+        self.fc2 = nn.Linear(self.d_ff, 1)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
@@ -15,5 +16,4 @@ class SimpleMLP(nn.Module):
         activated = F.relu(hidden)
         dropout = self.dropout(activated)
         output = self.fc2(dropout)
-        return output
-        # return self.fc2(self.dropout(F.relu(self.fc1(x)))) # 1-liner pythonic way
+        return torch.relu(torch.sign(output))  # not ideal but did for specific dataset
