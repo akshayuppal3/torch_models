@@ -1,16 +1,16 @@
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
-from torch.utils.data.dataset import random_split, TensorDataset
+from torch.utils.data.dataset import random_split
 
 
-class CustomeDataset(Dataset):
+class CustomDataset(Dataset):
     def __init__(self, x_tensor, y_tensor):
         self.x = x_tensor
         self.y = y_tensor
 
     def __getitem__(self, index):
-        return (self.x[index], self.y[index])
+        return self.x[index], self.y[index]
 
     def __len__(self):
         return len(self.x)
@@ -26,10 +26,12 @@ def get_train_val_loader(train_batch_size=16, val_batch_size=20, shuffle=True):
     x_tensor = torch.from_numpy(x).float()
     y_tensor = torch.from_numpy(y).float()
 
-    dataset = CustomeDataset(x_tensor, y_tensor)  # could use TensorDataset
+    # useful if want to use DataLoader that will load data in mini batches
+    dataset = CustomDataset(x_tensor, y_tensor)  # could also use TensorDataset
 
     train_dataset, val_dataset = random_split(dataset, [80, 20])
 
+    # useful for getting minibatch of data (mini-batch gradient descent)
     train_loader = DataLoader(dataset=train_dataset, batch_size=train_batch_size, shuffle=shuffle)
     val_loader = DataLoader(dataset=val_dataset, batch_size=val_batch_size, shuffle=shuffle)
 
@@ -56,5 +58,5 @@ def make_train_step(model, loss_fn, optimizer):
 
         return loss.item()
 
-    # return function taht will be called inside train loop
+    # return function that will be called inside train loop
     return train_step

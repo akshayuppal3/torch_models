@@ -12,24 +12,23 @@ if __name__ == '__main__':
 
     torch.manual_seed(42)
 
-    lr = 0.05
-    n_epochs = 1000
+    lr = 0.1
+    n_epochs = 100
     model = ManualRegression().to(device)
 
     print(model.state_dict())
 
     loss_fn = nn.MSELoss(reduction='mean')
-    optimizer = optim.Adam(model.parameters(), lr=lr)  # could use Adam optimizer as well
+    optimizer = optim.SGD(model.parameters(), lr=lr)  # could use Adam optimizer as well
 
-    train_loader, val_loader = get_train_val_loader()
+    train_loader, val_loader = get_train_val_loader(shuffle=False)
 
     train_step = make_train_step(model, loss_fn, optimizer)
 
     losses = []
     val_losses = []
     for epoch in range(n_epochs):
-        for x_batch , y_batch in train_loader:
-
+        for x_batch, y_batch in train_loader:
             x_batch = x_batch.to(device)
             y_batch = y_batch.to(device)
 
@@ -48,7 +47,7 @@ if __name__ == '__main__':
             val_loss = loss_fn(y_val, yhat)
             val_losses.append(val_loss.item())
 
+        print("epoch = ", epoch, "val_loss", sum(val_losses), "train_loss", sum(losses) )
+
     # check model params
     print(model.state_dict())
-
-    # evaluate the performance
