@@ -2,8 +2,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+from common_utils import get_train_val_loader
 from linear_model import ManualRegression
-from preprocessing import get_train_val_loader, make_train_step
+from preprocessing import make_train_step, get_data
 
 if __name__ == '__main__':
 
@@ -21,7 +22,8 @@ if __name__ == '__main__':
     loss_fn = nn.MSELoss(reduction='mean')
     optimizer = optim.SGD(model.parameters(), lr=lr)  # could use Adam optimizer as well
 
-    train_loader, val_loader = get_train_val_loader(shuffle=False)
+    x_tensor, y_tensor = get_data()
+    train_loader, val_loader = get_train_val_loader(x_tensor, y_tensor, shuffle=False)
 
     train_step = make_train_step(model, loss_fn, optimizer)
 
@@ -37,18 +39,19 @@ if __name__ == '__main__':
             losses.append(loss)
 
         # evaluation on val data
-        for x_val, y_val in val_loader:
-            x_val = x_val.to(device)  # loading only sample of dataset in memory
-            y_val = y_val.to(device)
+        with torch.no_grad():
+            for x_val, y_val in val_loader:
+                x_val = x_val.to(device)  # loading only sample of dataset in memory
+                y_val = y_val.to(device)
 
-            model.eval()
+                model.eval()
 
-            yhat = model(x_val)
+                yhat = model(x_val)
 
-            val_loss = loss_fn(y_val, yhat)
-            val_losses.append(val_loss.item())
+                val_loss = loss_fn(y_val, yhat)
+                val_losses.append(val_loss.item())
 
-        print("epoch = ", epoch, "val_loss", sum(val_losses)/(epoch+1), "train_loss", sum(losses)/(epoch+1) )
+            print("epoch = ", epoch, "val_loss", sum(val_losses) / (epoch + 1), "train_loss", sum(losses) / (epoch + 1))
 
     # check model params
     print(model.state_dict())

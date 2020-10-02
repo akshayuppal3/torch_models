@@ -1,7 +1,6 @@
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, Dataset, SequentialSampler
-from torch.utils.data.dataset import random_split
+from torch.utils.data import Dataset
 
 
 class CustomDataset(Dataset):
@@ -16,9 +15,9 @@ class CustomDataset(Dataset):
         return len(self.x)
 
 
-def get_train_val_loader(train_batch_size=16, val_batch_size=20, shuffle=True):
-    x = np.random.rand(100, 1)
-    assert x.shape == (100, 1)
+def get_data(x_dim=100):
+    x = np.random.rand(x_dim, 1)
+    assert x.shape == (x_dim, 1)
 
     # linear equation
     y = 1 + 2 * x + 0.1 * np.random.rand(100, 1)
@@ -26,18 +25,7 @@ def get_train_val_loader(train_batch_size=16, val_batch_size=20, shuffle=True):
     x_tensor = torch.from_numpy(x).float()
     y_tensor = torch.from_numpy(y).float()
 
-    # useful if want to use DataLoader that will load data in mini batches
-    dataset = CustomDataset(x_tensor, y_tensor)  # could also use TensorDataset
-
-    train_dataset, val_dataset = random_split(dataset, [80, 20])
-
-    train_sampler = SequentialSampler(train_dataset)
-    val_sampler = SequentialSampler(val_dataset)
-    # useful for getting minibatch of data (mini-batch gradient descent)
-    train_loader = DataLoader(train_dataset, sampler=train_sampler,batch_size=train_batch_size, shuffle=shuffle)
-    val_loader = DataLoader(val_dataset,sampler=val_sampler, batch_size=val_batch_size, shuffle=shuffle)
-
-    return train_loader, val_loader
+    return x_tensor, y_tensor
 
 
 def make_train_step(model, loss_fn, optimizer):
