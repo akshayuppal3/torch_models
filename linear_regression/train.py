@@ -6,7 +6,6 @@ from common_utils.util import get_train_val_loader, get_data
 from linear_regression.linear_model import ManualRegression
 from linear_regression.preprocessing import make_train_step
 
-
 if __name__ == '__main__':
 
     # switch to cuda if available
@@ -31,13 +30,14 @@ if __name__ == '__main__':
     losses = []
     val_losses = []
     for epoch in range(n_epochs):
+        train_loss, val_loss = 0, 0
         for x_batch, y_batch in train_loader:
             x_batch = x_batch.to(device)
             y_batch = y_batch.to(device)
 
             loss = train_step(x_batch, y_batch)
 
-            losses.append(loss)
+            train_loss += loss
 
         # evaluation on val data
         with torch.no_grad():
@@ -49,10 +49,10 @@ if __name__ == '__main__':
 
                 yhat = model(x_val)
 
-                val_loss = loss_fn(y_val, yhat)
-                val_losses.append(val_loss.item())
+                loss_v = loss_fn(y_val, yhat)
+                val_loss += loss_v
 
-            print("epoch = ", epoch, "val_loss", sum(val_losses) / (epoch + 1), "train_loss", sum(losses) / (epoch + 1))
+            print("epoch = ", epoch, "val_loss", val_loss, "train_loss", train_loss)
 
     # check model params
     print(model.state_dict())
