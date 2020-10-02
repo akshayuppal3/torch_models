@@ -12,8 +12,8 @@ if __name__ == '__main__':
 
     torch.manual_seed(42)
 
-    lr = 0.1
-    n_epochs = 100
+    lr = 0.01
+    n_epochs = 1000
     model = ManualRegression().to(device)
 
     print(model.state_dict())
@@ -33,6 +33,7 @@ if __name__ == '__main__':
             y_batch = y_batch.to(device)
 
             loss = train_step(x_batch, y_batch)
+
             losses.append(loss)
 
         # evaluation on val data
@@ -47,7 +48,7 @@ if __name__ == '__main__':
             val_loss = loss_fn(y_val, yhat)
             val_losses.append(val_loss.item())
 
-        print("epoch = ", epoch, "val_loss", sum(val_losses), "train_loss", sum(losses) )
+        print("epoch = ", epoch, "val_loss", sum(val_losses)/(epoch+1), "train_loss", sum(losses)/(epoch+1) )
 
     # check model params
     print(model.state_dict())
