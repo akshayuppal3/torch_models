@@ -2,14 +2,15 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from linear_regression.linear_model import ManualRegression
+from linear_model import ManualRegression
+from preprocessing import get_x_y
 
 if __name__ == '__main__':
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     torch.manual_seed(42)
 
-    lr = 0.1
+    lr = 0.05
     n_epochs = 1000
     model = ManualRegression().to(device)
 
@@ -44,3 +45,5 @@ if __name__ == '__main__':
         optimizer.zero_grad()
 
     print(model.state_dict())
+
+    # evaluate the performance
