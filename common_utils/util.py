@@ -32,7 +32,7 @@ def get_data(x_dim=100):
 def get_train_val_loader(
         x_tensor: torch.Tensor,
         y_tensor: torch.Tensor,
-        split_seq = [80,20],
+        split_seq=[80, 20],
         train_batch_size=16,
         val_batch_size=20,
         shuffle=True
