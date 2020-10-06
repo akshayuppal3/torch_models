@@ -6,19 +6,20 @@ import torch.nn.functional as F
 
 
 class MyNetwork(nn.Module):
-    def __init__(self, vocab_size, dim_model=512, d_ff=2048, dropout=0.1):
+    def __init__(self, vocab_size, head_num=4, d_model=512, dropout=0.1):
         super().__init__()
-        self.embedding = nn.Embedding(vocab_size, dim_model)
-        self.pe = PositonalEncoding(dim_model, dropout)
-        self.attn = MultiHeadAttention(dim_model, head_num=4)
-        self.batchnorm = nn.LayerNorm(dim_model)
-        self.l1 = nn.Linear(dim_model, d_ff)
-        self.l2 = nn.Linear(d_ff, 2)
+        self.embedding = nn.Embedding(vocab_size, d_model)
+        self.pe = PositonalEncoding(d_model, dropout)
+        self.attn = MultiHeadAttention(d_model, head_num=head_num)
+        self.batchnorm = nn.LayerNorm(d_model)
+        self.l1 = nn.Linear(d_model, d_model)
+        self.l2 = nn.Linear(d_model, 2)
         self.droput = nn.Dropout(dropout)
 
     def forward(self, inputs):
         rnn_outputs = self.pe(self.embedding(inputs))
-        outputs = rnn_outputs + self.attn(rnn_outputs, rnn_outputs, rnn_outputs) # deep residual connection
+        mask = self.attn.gen_history_mask(rnn_outputs)
+        outputs = rnn_outputs + self.attn(rnn_outputs, rnn_outputs, rnn_outputs, mask=mask)  # deep residual connection
         outputs = self.batchnorm(outputs)
         return self.l2(self.droput(F.relu(self.l1(outputs))))
 
@@ -41,11 +42,13 @@ class PositonalEncoding(nn.Module):
 
 
 class MultiHeadAttention(nn.Module):
-    def __init__(self,
-                 in_features,
-                 head_num,
-                 bias=True,
-                 activation=F.relu):
+    def __init__(
+            self,
+            in_features,
+            head_num,
+            bias=True,
+            activation=F.relu
+    ):
         super(MultiHeadAttention, self).__init__()
         if in_features % head_num != 0:
             raise ValueError('in_features({}) should be divisible by head_num({})'.format(in_features, head_num))
@@ -89,13 +92,13 @@ class MultiHeadAttention(nn.Module):
             .permute(0, 2, 1, 3) \
             .reshape(batch_size * self.head_num, seq_len, sub_dim)
 
-    def _reshape_from_batches(self,x):
+    def _reshape_from_batches(self, x):
         batch_size, seq_len, in_feature = x.size()
         batch_size //= self.head_num
         out_dim = in_feature * self.head_num
         return x.reshape(batch_size, self.head_num, seq_len, in_feature) \
-               .permute(0, 2, 1, 3) \
-               .reshape(batch_size, seq_len, out_dim)
+            .permute(0, 2, 1, 3) \
+            .reshape(batch_size, seq_len, out_dim)
 
     def extra_repr(self):
         return 'in_features={}, head_num={}, bias={}, activation={}'.format(

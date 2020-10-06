@@ -49,3 +49,19 @@ def get_train_val_loader(
     val_loader = DataLoader(val_dataset, sampler=val_sampler, batch_size=val_batch_size, shuffle=shuffle)
 
     return train_loader, val_loader
+
+
+def get_train_loader(
+        x_tensor: torch.Tensor,
+        y_tensor: torch.Tensor,
+        batch_size=16,
+        shuffle=True
+):
+    # useful if want to use DataLoader that will load data in mini batches
+    dataset = CustomDataset(x_tensor, y_tensor)  # could also use TensorDataset
+
+    train_sampler = SequentialSampler(dataset)
+    # useful for getting minibatch of data (mini-batch gradient descent)
+    train_loader = DataLoader(dataset, sampler=train_sampler, batch_size=batch_size, shuffle=shuffle)
+
+    return train_loader
