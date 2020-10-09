@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class MyNetwork(nn.Module):
+class TransformerNetwork(nn.Module):
     def __init__(self, vocab_size, head_num=4, d_model=512, dropout=0.1):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, d_model)
